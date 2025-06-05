@@ -17,7 +17,7 @@
 
         <div class="grid md:grid-cols-2 gap-8">
             <a href="{{ route('calorieCalculator') }}"
-                class="flex flex-col items-center justify-center p-8 bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300">
+                class="flex flex-col items-center justify-center p-8 bg-blue-600 hover:bg-teal-700 text-white rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300">
                 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><line x1="16" x2="8" y1="6" y2="6"/><line x1="16" x2="8" y1="10" y2="10"/><line x1="12" x2="12" y1="14" y2="14"/><line x1="12" x2="12" y1="18" y2="18"/></svg>
                 <span class="text-2xl font-bold">Penghitung Kalori Harian</span>
             </a>

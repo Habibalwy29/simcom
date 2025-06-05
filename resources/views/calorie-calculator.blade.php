@@ -80,7 +80,7 @@
             </div>
             <button
                 type="submit"
-                class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg shadow-md mt-6 transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300"
+                class="w-full bg-green-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg shadow-md mt-6 transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300"
             >
                 Hitung Kebutuhan Kalori
             </button>

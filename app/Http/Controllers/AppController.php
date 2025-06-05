@@ -14,25 +14,25 @@ class AppController extends Controller
     {
         return view('landing');
     }
-
+    public function login()
+    {
+        return view('login'); // ATAU path yang benar ke file login.blade.php Anda
+    }
     /**
      * Menampilkan menu utama setelah login.
      */
     public function mainMenu()
     {
-        // Mendapatkan user yang sedang login
         $user = Auth::user();
-        // Meneruskan data user ke tampilan
         return view('main-menu', compact('user'));
     }
 
     /**
      * Menampilkan halaman penghitung kalori harian.
      */
-    public function calorieCalculator()
+    public function calorieCalculator(Request $request)
     {
-        // Jika ada data hasil perhitungan dari sesi, teruskan ke view
-        $calculatedData = session('calculated_data');
+        $calculatedData = $request->session()->get('calculated_data');
         return view('calorie-calculator', compact('calculatedData'));
     }
 
@@ -41,13 +41,12 @@ class AppController extends Controller
      */
     public function calculateCalories(Request $request)
     {
-        // Lakukan validasi input
         $request->validate([
             'age' => 'required|numeric|min:1',
             'height' => 'required|numeric|min:1',
             'weight' => 'required|numeric|min:1',
             'gender' => 'required|in:male,female',
-            'activityLevel' => 'required|string', // Bisa ditambahkan validasi 'in' dengan level aktivitas yang valid
+            'activityLevel' => 'required|string',
         ]);
 
         $age = (float)$request->input('age');
@@ -56,7 +55,6 @@ class AppController extends Controller
         $gender = $request->input('gender');
         $activityLevel = $request->input('activityLevel');
 
-        // Lakukan perhitungan BMI
         $heightInMeters = $height / 100;
         $bmi = $weight / ($heightInMeters * $heightInMeters);
         $bmiStatus = '';
@@ -70,7 +68,6 @@ class AppController extends Controller
             $bmiStatus = 'Obesitas (Obese)';
         }
 
-        // Hitung BMR (Basal Metabolic Rate) menggunakan Mifflin-St Jeor Equation
         $bmr = 0;
         if ($gender === 'male') {
             $bmr = (10 * $weight) + (6.25 * $height) - (5 * $age) + 5;
@@ -78,24 +75,20 @@ class AppController extends Controller
             $bmr = (10 * $weight) + (6.25 * $height) - (5 * $age) - 161;
         }
 
-        // Tentukan multiplier aktivitas
-        $activityMultiplier = 1.2; // Sedentary (default)
+        $activityMultiplier = 1.2;
         switch ($activityLevel) {
             case 'lightlyActive': $activityMultiplier = 1.375; break;
             case 'moderatelyActive': $activityMultiplier = 1.55; break;
             case 'veryActive': $activityMultiplier = 1.725; break;
             case 'extraActive': $activityMultiplier = 1.9; break;
         }
-
-        // Hitung Kebutuhan Kalori Harian
         $dailyCalories = round($bmr * $activityMultiplier);
 
-        // Simpan hasil ke sesi
         $request->session()->flash('calculated_data', [
             'bmiStatus' => $bmiStatus,
             'dailyCalories' => $dailyCalories,
         ]);
-        $request->session()->put('calculated_calories_for_order', $dailyCalories); // Simpan untuk halaman order
+        $request->session()->put('calculated_calories_for_order', $dailyCalories);
 
         return redirect()->route('calorieCalculator')->with('success', 'Perhitungan berhasil!');
     }
@@ -105,42 +98,92 @@ class AppController extends Controller
      */
     public function dietOrdering(Request $request)
     {
-        // Meneruskan data kalori yang mungkin berasal dari halaman perhitungan
-        $calculatedCalories = $request->session()->get('calculated_calories_for_order');
-        
-        // Mock data makanan diet (Anda bisa memuat dari database)
+        $calculatedCalories = $request->session()->get('calculated_calories_for_order', 0);
+
+        // Dalam AppController.php, di dalam metode dietOrdering()
+
         $dietFoodItems = [
-            ['id' => 'df1', 'name' => 'Salad Ayam Panggang', 'calories' => 350, 'price' => 45000, 'image' => 'https://placehold.co/150x100/A7F3D0/065F46?text=Salad+Ayam'],
-            ['id' => 'df2', 'name' => 'Nasi Merah Salmon Panggang', 'calories' => 500, 'price' => 70000, 'image' => 'https://placehold.co/150x100/FEE2E2/991B1B?text=Salmon+Rice'],
-            ['id' => 'df3', 'name' => 'Sup Sayuran Detoks', 'calories' => 200, 'price' => 30000, 'image' => 'https://placehold.co/150x100/DBEAFE/1E40AF?text=Sup+Sayur'],
-            ['id' => 'df4', 'name' => 'Smoothie Hijau Protein', 'calories' => 280, 'price' => 35000, 'image' => 'https://placehold.co/150x100/D1FAE5/065F46?text=Smoothie'],
-            ['id' => 'df5', 'name' => 'Steak Tempe dengan Quinoa', 'calories' => 420, 'price' => 55000, 'image' => 'https://placehold.co/150x100/FEE2E2/991B1B?text=Tempe+Quinoa'],
-            ['id' => 'df6', 'name' => 'Wrap Ayam Gandum Utuh', 'calories' => 380, 'price' => 40000, 'image' => 'https://placehold.co/150x100/DBEAFE/1E40AF?text=Wrap+Ayam'],
-            ['id' => 'df7', 'name' => 'Pasta Gandum Utuh dengan Pesto', 'calories' => 480, 'price' => 60000, 'image' => 'https://placehold.co/150x100/A7F3D0/065F46?text=Pasta+Pesto'],
-            ['id' => 'df8', 'name' => 'Oatmeal Buah Beri', 'calories' => 250, 'price' => 28000, 'image' => 'https://placehold.co/150x100/FEE2E2/991B1B?text=Oatmeal'],
+            [
+                'id' => 'df1',
+                'name' => 'Salad Ayam Panggang',
+                'calories' => 350,
+                'price' => 45000,
+                'image' => asset('images\salad_ayam.jpg') // DIUBAH
+            ],
+            [
+                'id' => 'df2',
+                'name' => 'Nasi Merah Salmon Panggang',
+                'calories' => 520,
+                'price' => 75000,
+                'image' => asset('images\nasi merah salmon.jpg') // DIUBAH
+            ],
+            [
+                'id' => 'df3',
+                'name' => 'Sup Sayuran Detoks',
+                'calories' => 200,
+                'price' => 30000,
+                'image' => asset('images\sup sayur.jpg') // DIUBAH
+            ],
+            [
+                'id' => 'df4',
+                'name' => 'Smoothie Hijau Protein',
+                'calories' => 280,
+                'price' => 35000,
+                'image' => asset('images\smothie.jpg') // DIUBAH (contoh .png)
+            ],
+            [
+                'id' => 'df5',
+                'name' => 'Steak Tempe dengan Quinoa',
+                'calories' => 420,
+                'price' => 55000,
+                'image' => asset('images\steak tempe.jpg') // DIUBAH
+            ],
+            // ... Lanjutkan untuk semua item lainnya ...
+            ['id' => 'df6', 'name' => 'Wrap Ayam Gandum Utuh', 'calories' => 380, 'price' => 40000, 'image' => asset('images\wrap ayam.jpg')],
+            ['id' => 'df7', 'name' => 'Pasta Gandum Utuh dengan Pesto', 'calories' => 480, 'price' => 60000, 'image' => asset('images\pasta gandum.jpg')],
+            ['id' => 'df8', 'name' => 'Oatmeal Buah Beri', 'calories' => 250, 'price' => 28000, 'image' => asset('images\oatmeal buah beri.jpg')],
+            ['id' => 'df9', 'name' => 'Telur Rebus 2 Butir', 'calories' => 160, 'price' => 15000, 'image' => asset('images\telur rebus.jpg')],
+            ['id' => 'df10', 'name' => 'Sup Ayam Bening', 'calories' => 180, 'price' => 28000, 'image' => asset('images\sup ayam.jpg')],
+            ['id' => 'df11', 'name' => 'Smoothie Hijau Detoks', 'calories' => 220, 'price' => 32000, 'image' => asset('images\smothie.jpg')],
+            ['id' => 'df12', 'name' => 'Tumis Tahu Brokoli', 'calories' => 290, 'price' => 30000, 'image' => asset('images\tumis tahu brokoli.jpg')],
+            ['id' => 'df13', 'name' => 'Gado-gado Tanpa Lontong', 'calories' => 380, 'price' => 35000, 'image' => asset('images\gado gado.jpg')],
+            ['id' => 'df14', 'name' => 'Ikan Patin Bakar', 'calories' => 320, 'price' => 48000, 'image' => asset('images\ikan patin.jpg')],
+            ['id' => 'df15', 'name' => 'Urap Sayur Komplit', 'calories' => 250, 'price' => 27000, 'image' => asset('images\urap.jpg')],
+            ['id' => 'df16', 'name' => 'Nasi Merah dengan Dada Ayam Panggang', 'calories' => 550, 'price' => 50000, 'image' => asset('images\dada ayam.jpg')],
+            ['id' => 'df17', 'name' => 'Salad Buah dengan Yogurt', 'calories' => 200, 'price' => 25000, 'image' => asset('images\salad buah.jpg')],
+            ['id' => 'df18', 'name' => 'Bubur Oat Pisang Madu', 'calories' => 310, 'price' => 20000, 'image' => asset('images\bubur oat.jpg')],
+            ['id' => 'df19', 'name' => 'Steak Daging Sapi Lada Hitam (Lean)', 'calories' => 600, 'price' => 90000, 'image' => asset('images\steak lada hitam.jpg')],
+            ['id' => 'df20', 'name' => 'Quinoa Bowl dengan Sayuran Hijau', 'calories' => 450, 'price' => 58000, 'image' => asset('images\quinoa.jpg')],
+            ['id' => 'df21', 'name' => 'Mie Shirataki Kuah Ayam', 'calories' => 190, 'price' => 38000, 'image' => asset('images\mie shirataki.jpg')],
+            ['id' => 'df22', 'name' => 'Sandwich Gandum Isi Tuna', 'calories' => 300, 'price' => 29000, 'image' => asset('images\sandwich.jpg')],
+            ['id' => 'df23', 'name' => 'Puding Chia Seeds Buah Naga', 'calories' => 260, 'price' => 33000, 'image' => asset('images\puding chia.jpg')],
+            ['id' => 'df24', 'name' => 'Paket Nasi Merah, Telur, dan Tempe', 'calories' => 400, 'price' => 28000, 'image' => asset('images\paket diet.jpg')],
+            ['id' => 'df27', 'name' => 'Steak Tempe Saus BBQ', 'calories' => 390, 'price' => 38000, 'image' => asset('images\steak tempe.jpg')],
+            ['id' => 'df28', 'name' => 'Salad Udang Alpukat', 'calories' => 410, 'price' => 65000, 'image' => asset('images\salad udang.jpg')],
+            ['id' => 'df29', 'name' => 'Sup Jamur Krim (Non-dairy)', 'calories' => 240, 'price' => 35000, 'image' => asset('images\sup jamur.jpg')],
+            ['id' => 'df30', 'name' => 'Paket Katering Diet Harian (Komplit)', 'calories' => 1600, 'price' => 150000, 'image' => asset('images\paket diet.jpg')],
+            ['id' => 'df31', 'name' => 'Pizza Gandum Tipis (Sayuran)', 'calories' => 700, 'price' => 80000, 'image' => asset('images\pizza.jpg')],
+            ['id' => 'df32', 'name' => 'Burrito Bowl Ayam (tanpa nasi)', 'calories' => 580, 'price' => 60000, 'image' => asset('images\buritto.jpg')],
+            ['id' => 'df33', 'name' => 'Large Personal Keto Meal (Protein Tinggi)', 'calories' => 850, 'price' => 95000, 'image' => asset('images\kato meal.jpg')],
+            ['id' => 'df34', 'name' => 'Paket Diet Vegetarian Seminggu', 'calories' => 3000, 'price' => 350000, 'image' => asset('images\paket katering.jpg')]
         ];
 
-        // Ambil item keranjang dari sesi
-        $cartItems = session('cart_items', []);
-        
-        // HITUNG totalCartPrice DI SINI
+        $cartItems = $request->session()->get('cart_items', []);
         $totalCartPrice = array_reduce($cartItems, function ($sum, $item) {
             return $sum + ($item['price'] * $item['quantity']);
         }, 0);
 
-        // Jika pengguna memasukkan kalori manual dari form GET, gunakan itu
         if ($request->has('manual_calories')) {
             $manualCalories = (float)$request->input('manual_calories');
             if ($manualCalories > 0) {
-                $calculatedCalories = $manualCalories; // Update kalori yang akan ditampilkan
-                $request->session()->put('calculated_calories_for_order', $manualCalories); // Update juga di sesi
-                session()->flash('message', 'Kebutuhan kalori diperbarui!');
+                $calculatedCalories = $manualCalories;
+                $request->session()->put('calculated_calories_for_order', $manualCalories);
+                session()->flash('message', 'Kebutuhan kalori diperbarui menjadi ' . $manualCalories . ' kkal!');
             } else {
                 session()->flash('message', 'Harap masukkan angka kalori yang valid.');
             }
         }
 
-        // Teruskan semua variabel yang dibutuhkan ke view
         return view('diet-ordering', compact('calculatedCalories', 'dietFoodItems', 'cartItems', 'totalCartPrice'));
     }
 
@@ -149,21 +192,30 @@ class AppController extends Controller
      */
     public function addToCart(Request $request)
     {
+        $request->validate([
+            'item_id' => 'required|string',
+            'item_name' => 'required|string',
+            'item_price' => 'required|numeric',
+            'item_calories' => 'required|numeric',
+        ]);
+
         $itemId = $request->input('item_id');
         $itemName = $request->input('item_name');
         $itemPrice = (float)$request->input('item_price');
-        $itemCalories = (int)$request->input('item_calories'); // Jika perlu
+        $itemCalories = (int)$request->input('item_calories');
 
         $cartItems = $request->session()->get('cart_items', []);
 
         $found = false;
-        foreach ($cartItems as &$item) {
-            if ($item['id'] == $itemId) {
-                $item['quantity']++;
+        foreach ($cartItems as &$cartItem) { // Use different variable name to avoid conflict if $item is used elsewhere
+            if ($cartItem['id'] == $itemId) {
+                $cartItem['quantity']++;
                 $found = true;
                 break;
             }
         }
+        unset($cartItem); // Unset reference
+
         if (!$found) {
             $cartItems[] = [
                 'id' => $itemId,
@@ -177,48 +229,120 @@ class AppController extends Controller
         $request->session()->put('cart_items', $cartItems);
         return redirect()->back()->with('success', $itemName . ' ditambahkan ke keranjang!');
     }
+    public function updateCartQuantity(Request $request)
+    {
+        $request->validate([
+            'item_id' => 'required|string',
+            'action' => 'required|in:increase,decrease',
+        ]);
 
+        $itemId = $request->input('item_id');
+        $action = $request->input('action');
+        $cartItems = $request->session()->get('cart_items', []);
+        $message = 'Item tidak ditemukan di keranjang. Gagal!'; // Pesan default
+        $itemProcessed = false;
+
+        foreach ($cartItems as $key => &$cartItem) { // Gunakan referensi untuk modifikasi langsung
+            if ($cartItem['id'] == $itemId) {
+                if ($action == 'increase') {
+                    $cartItem['quantity']++;
+                    $message = $cartItem['name'] . ' kuantitas berhasil ditambah.';
+                } elseif ($action == 'decrease') {
+                    $cartItem['quantity']--;
+                    if ($cartItem['quantity'] <= 0) {
+                        unset($cartItems[$key]); // Hapus item jika kuantitas 0 atau kurang
+                        $message = $cartItem['name'] . ' berhasil dihapus dari keranjang.';
+                    } else {
+                        $message = $cartItem['name'] . ' kuantitas berhasil dikurangi.';
+                    }
+                }
+                $itemProcessed = true;
+                break; // Hentikan loop setelah item ditemukan dan diproses
+            }
+        }
+        unset($cartItem); // Hapus referensi setelah loop
+
+        if ($itemProcessed) {
+            // Re-index array untuk menghilangkan gap dari unset
+            $request->session()->put('cart_items', array_values($cartItems));
+        }
+        
+        return redirect()->route('dietOrdering')->with('message', $message);
+    }
+
+    /**
+     * Menghapus item dari keranjang belanja.
+     */
+    public function removeFromCart(Request $request)
+    {
+        $request->validate([
+            'item_id' => 'required|string',
+        ]);
+
+        $itemId = $request->input('item_id');
+        $cartItems = $request->session()->get('cart_items', []);
+        $itemName = 'Item yang dipilih'; // Default name
+        $itemRemoved = false;
+
+        foreach ($cartItems as $key => $cartItem) {
+            if ($cartItem['id'] == $itemId) {
+                $itemName = $cartItem['name'];
+                unset($cartItems[$key]);
+                $itemRemoved = true;
+                break; // Hentikan loop setelah item ditemukan dan dihapus
+            }
+        }
+
+        if ($itemRemoved) {
+            // Re-index array untuk menghilangkan gap dari unset
+            $request->session()->put('cart_items', array_values($cartItems));
+            return redirect()->route('dietOrdering')->with('message', $itemName . ' berhasil dihapus dari keranjang.');
+        }
+
+        return redirect()->route('dietOrdering')->with('message', 'Item tidak ditemukan untuk dihapus. Gagal!');
+    }
     /**
      * Menampilkan halaman pembayaran dengan detail keranjang.
      */
-    public function payment()
+    public function payment(Request $request)
     {
-        // Ambil item keranjang dari sesi untuk ditampilkan di halaman pembayaran
-        $cartItems = session('cart_items', []);
+        $cartItems = $request->session()->get('cart_items', []);
         $totalAmount = array_reduce($cartItems, function ($sum, $item) {
             return $sum + ($item['price'] * $item['quantity']);
         }, 0);
 
-        return view('payment', compact('cartItems', 'totalAmount'));
+        $calculatedCalories = $request->session()->get('calculated_calories_for_order', 0);
+
+        return view('payment', compact('cartItems', 'totalAmount', 'calculatedCalories'));
     }
 
     /**
      * Memproses pembayaran pesanan.
      */
     public function processPayment(Request $request)
-    {
-        $paymentMethod = $request->input('payment_method');
-        $cartItems = $request->session()->get('cart_items', []);
-        $totalAmount = array_reduce($cartItems, function ($sum, $item) {
-            return $sum + ($item['price'] * $item['quantity']);
-        }, 0);
+{
+    $request->validate([
+        'payment_method' => 'required|string|in:cod,transfer,ewallet',
+    ]);
 
-        // --- Di sini Anda akan menambahkan logika pemrosesan pembayaran yang sebenarnya ---
-        // Contoh: Simpan detail pesanan ke database
-        // Order::create([
-        //     'user_id' => Auth::id(),
-        //     'items' => json_encode($cartItems),
-        //     'total_amount' => $totalAmount,
-        //     'payment_method' => $paymentMethod,
-        //     'status' => 'pending', // atau 'completed'
-        // ]);
-        // --- Akhir logika pemrosesan pembayaran ---
+    $paymentMethod = $request->input('payment_method');
+    $cartItems = $request->session()->get('cart_items', []);
+    // ... (validasi keranjang tidak kosong) ...
 
-        // Hapus keranjang setelah pembayaran berhasil
-        $request->session()->forget('cart_items');
-
-        return redirect()->route('mainMenu')->with('success', 'Pembayaran berhasil! Pesanan Anda sedang diproses.');
+    if (empty($cartItems)) {
+        // Menggunakan 'error' agar sesuai dengan @if(session('error')) di payment.blade.php
+        return redirect()->route('dietOrdering')->with('error', 'Keranjang Anda kosong. Tidak ada yang bisa diproses.');
     }
+
+    // ... Logika pemrosesan pembayaran Anda ...
+
+    $request->session()->forget('cart_items');
+    // $request->session()->forget('calculated_calories_for_order'); // Opsional
+
+    // Menggunakan 'success' untuk pesan sukses
+    return redirect()->route('mainMenu') // Atau route halaman konfirmasi pesanan jika ada
+                   ->with('success', 'Pembayaran berhasil! Pesanan Anda dengan metode ' . $paymentMethod . ' sedang diproses.');
+}
 
     /**
      * Menampilkan dan mengelola halaman profil pengguna.
@@ -226,24 +350,17 @@ class AppController extends Controller
     public function account()
     {
         $user = Auth::user();
-        // Anda bisa memuat data profil lengkap dari database di sini
-        // Untuk contoh ini, menggunakan data mock yang mungkin diperbarui dari DB
-        $profileData = [
-            'fullName' => $user->name ?? 'Pengguna SIM',
-            'username' => $user->email ? explode('@', $user->email)[0] : 'default_username', // Mengambil bagian email sebelum '@'
-            'email' => $user->email ?? 'default@example.com',
-            'phoneNumber' => '+62 81234567890', // Contoh data mock
-            'profilePicture' => 'https://placehold.co/100x100/4DB6AC/FFFFFF?text=DC',
-        ];
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Silakan login untuk mengakses akun Anda.');
+        }
 
-        // Jika Anda menyimpan data profil di tabel terpisah (misalnya 'user_profiles'), Anda akan memuatnya di sini
-        // $userProfile = UserProfile::where('user_id', $user->id)->first();
-        // if ($userProfile) {
-        //     $profileData['fullName'] = $userProfile->full_name;
-        //     $profileData['phoneNumber'] = $userProfile->phone_number;
-        //     $profileData['profilePicture'] = $userProfile->profile_picture;
-        // }
-        
+        $profileData = [
+            'fullName' => $user->name ?? 'Pengguna DietCare',
+            'username' => $user->email ? explode('@', $user->email)[0] : 'pengguna_default',
+            'email' => $user->email ?? 'Tidak ada email',
+            'phoneNumber' => $user->phone_number ?? '+62 800-0000-0000', // Asumsikan ada field phone_number di tabel users
+            'profilePicture' => $user->profile_picture ?? 'https://placehold.co/100x100/4DB6AC/FFFFFF?text=DC', // Asumsikan ada field
+        ];
         return view('account', compact('user', 'profileData'));
     }
 
@@ -253,26 +370,35 @@ class AppController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        if ($user) {
-            // Lakukan validasi input
-            $request->validate([
-                'fullName' => 'required|string|max:255',
-                'username' => 'required|string|max:255',
-                'phoneNumber' => 'nullable|string|max:20',
-                'profilePicture' => 'nullable|url|max:255', // Tambahkan validasi untuk URL gambar
-            ]);
-
-           
-
-            // Jika Anda memiliki tabel profil terpisah (misalnya UserProfile), Anda akan memperbarui di sana
-            // $userProfile = UserProfile::firstOrCreate(['user_id' => $user->id]);
-            // $userProfile->full_name = $request->input('fullName');
-            // $userProfile->phone_number = $request->input('phoneNumber');
-            // $userProfile->profile_picture = $request->input('profilePicture');
-            // $userProfile->save();
-
-            return redirect()->route('account')->with('success', 'Profil berhasil diperbarui!');
+        if (!$user) {
+            return redirect()->back()->with('error', 'Gagal memperbarui profil. Pengguna tidak terautentikasi.');
         }
-        return redirect()->back()->with('error', 'Gagal memperbarui profil. Pengguna tidak terautentikasi.');
+
+        $request->validate([
+            'fullName' => 'required|string|max:255',
+            // 'username' => 'required|string|max:255|unique:users,username,'.$user->id, // Jika username bisa diubah & unik
+            'phoneNumber' => 'nullable|string|max:20',
+            // 'profilePictureFile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // For file upload
+            'profilePictureUrl' => 'nullable|url|max:255', // For URL input
+        ]);
+
+        $user->name = $request->input('fullName');
+        // if ($request->filled('username')) { $user->username = $request->input('username'); }
+        if ($request->filled('phoneNumber')) {
+            // $user->phone_number = $request->input('phoneNumber'); // Jika ada field di tabel users
+        }
+
+        // Handle profile picture update (contoh untuk URL input)
+        if ($request->filled('profilePictureUrl')) {
+            // $user->profile_picture = $request->input('profilePictureUrl'); // Jika ada field
+        }
+        // if ($request->hasFile('profilePictureFile')) {
+            // $path = $request->file('profilePictureFile')->store('profile_pictures', 'public');
+            // $user->profile_picture = Storage::url($path);
+        // }
+
+        // $user->save();
+
+        return redirect()->route('account')->with('success', 'Profil berhasil diperbarui!');
     }
 }

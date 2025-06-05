@@ -12,6 +12,20 @@
         html {
             scroll-behavior: smooth;
         }
+        /* Style untuk notifikasi agar muncul di atas dan di tengah */
+        .session-alert-wrapper {
+            position: fixed;
+            top: 1rem; /* Jarak dari atas */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050; /* Pastikan di atas elemen lain */
+            width: auto;
+            max-width: 90%; /* Maksimum lebar notifikasi */
+            padding-top: 70px; /* Beri ruang di bawah header fixed */
+        }
+        .session-alert {
+            min-width: 320px; /* Lebar minimum notifikasi */
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
@@ -70,7 +84,34 @@
             </nav>
         </div>
     </header>
-
+{{-- Wrapper untuk Notifikasi Global --}}
+        <div class="session-alert-wrapper w-full md:w-auto">
+            @if (session('success'))
+                <div class="session-alert mb-4 p-4 text-sm text-green-700 bg-green-100 rounded-lg shadow-lg text-center" role="alert">
+                    <span class="font-medium">Sukses!</span> {{ session('success') }}
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="session-alert mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg shadow-lg text-center" role="alert">
+                    <span class="font-medium">Error!</span> {{ session('error') }}
+                </div>
+            @endif
+            @if (session('message'))
+                <div class="session-alert mb-4 p-4 text-sm text-blue-700 bg-blue-100 rounded-lg shadow-lg text-center" role="alert">
+                    {{ session('message') }}
+                </div>
+            @endif
+            @if ($errors->any() && !session('success') && !session('error') && !session('message'))
+                <div class="session-alert mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg shadow-lg" role="alert">
+                    <span class="font-medium">Oops! Ada beberapa kesalahan validasi:</span>
+                    <ul class="mt-1.5 list-disc list-inside text-left">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+        </div>
     <main class="flex-grow pt-20 pb-10"> {{-- Sesuaikan padding berdasarkan tinggi header --}}
         @yield('content')
     </main>
@@ -84,7 +125,7 @@
                 <p>© 2024 PT. Sehat Itu Mahal. All Rights Reserved.</p>
             </div>
             <div class="flex space-x-6">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-teal-600 transition-colors duration-200">
+                <a href="https://www.instagram.com/alfauziiii_/" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-teal-600 transition-colors duration-200">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.5" y1="6.5" y2="6.5"/></svg>
                 </a>
             
@@ -113,6 +154,22 @@
                 mobileMenuButton.innerHTML = isHidden ? menuIconSvg : xIconSvg; // Toggle icon
             });
         });
+        // Script untuk menghilangkan notifikasi setelah beberapa detik
+        const alerts = document.querySelectorAll('.session-alert');
+            alerts.forEach(function(alert) {
+                if (alert.textContent.trim() !== '') { // Hanya proses jika ada teks di dalam alert
+                    setTimeout(function() {
+                        alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        alert.style.opacity = '0';
+                        alert.style.transform = 'translateY(-20px)';
+                        setTimeout(function() {
+                            alert.remove();
+                        }, 550); // Waktu untuk animasi fade out + sedikit buffer
+                    }, 5000); // Notifikasi hilang setelah 5 detik
+                } else {
+                    alert.remove(); // Hapus alert kosong
+                }
+            });
     </script>
 </body>
 </html>
