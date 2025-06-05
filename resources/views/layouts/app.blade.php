@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIM.com - @yield('title', 'Kesehatan Optimal')</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> 
     {{-- Anda akan mengganti ini dengan kompilasi Tailwind CSS lokal Anda di proyek Laravel (misalnya via Vite/Laravel Mix) --}}
-    {{-- <link rel="stylesheet" href="{{ asset('css/app.css') }}"> --}}
+    {{--<link rel="stylesheet" href="{{ asset('css/app.css')}}">  --}}
     <style>
         
         html {

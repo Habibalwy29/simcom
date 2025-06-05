@@ -122,7 +122,7 @@
 
             <div class="flex items-center my-6">
                 <hr class="flex-grow border-gray-300" />
-                <span class="px-4 text-gray-500">ATALU</span>
+                <span class="px-4 text-gray-500">ATAU</span>
                 <hr class="flex-grow border-gray-300" />
             </div>
 

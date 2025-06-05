@@ -1,28 +1,23 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/sass/app.scss',
+                'resources/css/app.css', // Pastikan jalur ke file CSS Anda benar
                 'resources/js/app.js',
             ],
             refresh: true,
         }),
-        vue({
-            template: {
-                transformAssetUrls: {
-                    base: null,
-                    includeAbsolute: false,
-                },
-            },
-        }),
     ],
-    resolve: {
-        alias: {
-            vue: 'vue/dist/vue.esm-bundler.js',
-        },
-    },
+    // Hapus atau komentari bagian 'css.postcss' jika Anda ingin postcss.config.js yang mengatur plugin
+    // css: {
+    //     postcss: {
+    //         plugins: [
+    //             // Hapus ini jika Anda mengandalkan postcss.config.js
+    //             // tailwindcss(),
+    //         ],
+    //     },
+    // },
 });
