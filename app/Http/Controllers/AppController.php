@@ -100,7 +100,7 @@ class AppController extends Controller
     {
         $calculatedCalories = $request->session()->get('calculated_calories_for_order', 0);
 
-        // Dalam AppController.php, di dalam metode dietOrdering()
+        
 
         $dietFoodItems = [
             [
@@ -108,28 +108,28 @@ class AppController extends Controller
                 'name' => 'Salad Ayam Panggang',
                 'calories' => 350,
                 'price' => 45000,
-                'image' => asset('images\salad_ayam.jpg') // DIUBAH
+                'image' => asset('images\salad_ayam.jpg') 
             ],
             [
                 'id' => 'df2',
                 'name' => 'Nasi Merah Salmon Panggang',
                 'calories' => 520,
                 'price' => 75000,
-                'image' => asset('images\nasi merah salmon.jpg') // DIUBAH
+                'image' => asset('images\nasi merah salmon.jpg') 
             ],
             [
                 'id' => 'df3',
                 'name' => 'Sup Sayuran Detoks',
                 'calories' => 200,
                 'price' => 30000,
-                'image' => asset('images\sup sayur.jpg') // DIUBAH
+                'image' => asset('images\sup sayur.jpg') 
             ],
             [
                 'id' => 'df4',
                 'name' => 'Smoothie Hijau Protein',
                 'calories' => 280,
                 'price' => 35000,
-                'image' => asset('images\smothie.jpg') // DIUBAH (contoh .png)
+                'image' => asset('images\smothie.jpg') 
             ],
             [
                 'id' => 'df5',
